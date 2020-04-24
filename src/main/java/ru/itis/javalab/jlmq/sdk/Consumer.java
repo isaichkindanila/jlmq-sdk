@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import static ru.itis.javalab.jlmq.sdk.JLMQ.MAPPER;
 
+/**
+ * Class handling messages from a queue.
+ */
 public class Consumer {
 
     private final Connector connector;
@@ -35,7 +38,7 @@ public class Consumer {
         this(connector, new ParsedMessageHandler<>(handler, messageClass));
     }
 
-    public void stop() {
+    void stop() {
         sleepingThread.interrupt();
     }
 
@@ -45,13 +48,13 @@ public class Consumer {
         try {
             root = MAPPER.readTree(message);
         } catch (JsonProcessingException e) {
-            stop();
+            connector.close();
             throw new RuntimeException("malformed JSON from server - should never happen", e);
         }
 
         String command = root.get("command").asText();
         if (!"receive".equals(command)) {
-            stop();
+            connector.close();
             throw new RuntimeException("malformed JSON from server - should never happen");
         }
 
@@ -64,7 +67,8 @@ public class Consumer {
         } catch (MalformedMessageException e) {
             connector.send(ConsumerMessage.malformed(token));
         } catch (Exception e) {
-            stop();
+            connector.close();
+            throw new RuntimeException(e);
         }
     }
 

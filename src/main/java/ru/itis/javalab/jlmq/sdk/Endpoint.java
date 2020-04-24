@@ -1,10 +1,11 @@
 package ru.itis.javalab.jlmq.sdk;
 
-import javax.websocket.ClientEndpoint;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
+import javax.websocket.*;
+import java.io.IOException;
 
+/**
+ * Used internally as a websocket endpoint.
+ */
 @ClientEndpoint
 public class Endpoint {
 
@@ -36,5 +37,16 @@ public class Endpoint {
         }
 
         session.getAsyncRemote().sendText(text);
+    }
+
+    @OnClose
+    public void onClose() {
+        connector.close();
+    }
+
+    void close() {
+        try {
+            session.close();
+        } catch (IOException ignore) {}
     }
 }

@@ -13,15 +13,15 @@ public class Main {
         Producer producer = connector.producer("test/sdk");
         Consumer consumer = connector.consumer("test/sdk", Message.class, message -> {
             System.out.println("received message: " + message.getText());
-            Thread.sleep(500);
+            Thread.sleep(200);
         });
 
         producer.send(new Message("hello"));
         producer.send(new Message("world"));
         producer.send(new Message("!"));
 
-        Thread.sleep(5000);
-        consumer.stop();
+        Thread.sleep(3000);
+        connector.close();
     }
 
     // "unused" methods are required for Jackson

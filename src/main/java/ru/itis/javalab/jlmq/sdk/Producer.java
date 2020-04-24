@@ -1,15 +1,23 @@
 package ru.itis.javalab.jlmq.sdk;
 
+/**
+ * Class publishing messages to a queue.
+ */
 public class Producer {
 
     private final Connector connector;
     private final String queue;
 
-    public Producer(Connector connector, String queue) {
+    Producer(Connector connector, String queue) {
         this.connector = connector;
         this.queue = queue;
     }
 
+    /**
+     * Publishes message to a queue.
+     * @param message will be converted to JSON by Jackson
+     * @throws IllegalStateException if connection is closed
+     */
     public void send(Object message) {
         connector.send(new ProducerMessage(queue, message));
     }
