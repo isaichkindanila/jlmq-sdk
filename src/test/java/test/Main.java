@@ -21,12 +21,14 @@ public class Main {
         producer.send(new Message("!"));
 
         Thread.sleep(5000);
+        consumer.stop();
     }
 
+    // "unused" methods are required for Jackson
+    @SuppressWarnings("unused")
     static class Message {
         private String text;
 
-        // no-args constructor for Jackson
         public Message() {
         }
 

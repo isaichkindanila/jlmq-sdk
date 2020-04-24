@@ -9,15 +9,34 @@ public class Consumer {
 
     private final Connector connector;
     private final MessageHandler<JsonNode> handler;
+    private final Thread sleepingThread;
 
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     Consumer(Connector connector, MessageHandler<JsonNode> handler) {
         this.connector = connector;
         this.handler = handler;
+
+        // non-daemon thread that keeps program from ending until explicitly stopped
+        sleepingThread = new Thread(() -> {
+            Object lock = new Object();
+
+            synchronized (lock) {
+                try {
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    // time to wake up
+                }
+            }
+        });
+        sleepingThread.start();
     }
 
     <T> Consumer(Connector connector, MessageHandler<T> handler, Class<? extends T> messageClass) {
-        this.connector = connector;
-        this.handler = new ParsedMessageHandler<>(handler, messageClass);
+        this(connector, new ParsedMessageHandler<>(handler, messageClass));
+    }
+
+    public void stop() {
+        sleepingThread.interrupt();
     }
 
     void handle(String message) {
@@ -26,13 +45,13 @@ public class Consumer {
         try {
             root = MAPPER.readTree(message);
         } catch (JsonProcessingException e) {
-            // TODO: stop this consumer
+            stop();
             throw new RuntimeException("malformed JSON from server - should never happen", e);
         }
 
         String command = root.get("command").asText();
         if (!"receive".equals(command)) {
-            // TODO: stop this consumer
+            stop();
             throw new RuntimeException("malformed JSON from server - should never happen");
         }
 
@@ -45,10 +64,12 @@ public class Consumer {
         } catch (MalformedMessageException e) {
             connector.send(ConsumerMessage.malformed(token));
         } catch (Exception e) {
-            // TODO: stop this consumer
+            stop();
         }
     }
 
+    // "unused" getter are required for Jackson
+    @SuppressWarnings("unused")
     static class ConsumerMessage {
         private final String command;
         private final String message;

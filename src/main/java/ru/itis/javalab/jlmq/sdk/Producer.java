@@ -14,6 +14,8 @@ public class Producer {
         connector.send(new ProducerMessage(queue, message));
     }
 
+    // "unused" getter are required for Jackson
+    @SuppressWarnings("unused")
     static class ProducerMessage {
         private final String queue;
         private final Object body;

@@ -62,6 +62,8 @@ public class Connector {
         return consumer;
     }
 
+    // "unused" getter are required for Jackson
+    @SuppressWarnings("unused")
     static class SubscribeMessage {
         private final String queue;
 
